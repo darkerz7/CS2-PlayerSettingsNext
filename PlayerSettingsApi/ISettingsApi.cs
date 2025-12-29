@@ -1,9 +1,4 @@
 ﻿using CounterStrikeSharp.API.Core;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PlayerSettings
 {
@@ -14,7 +9,6 @@ namespace PlayerSettings
         public void AddHook(Action<CCSPlayerController> action);
         public void RemHook(Action<CCSPlayerController> action);
 
-        
         public void RegisterTogglableSetting(string name, string viewName);
         public void RegisterSelectingSetting(string name, string viewName, Dictionary<string, string> values);        
         public List<SettingItem> GetSettingItems();

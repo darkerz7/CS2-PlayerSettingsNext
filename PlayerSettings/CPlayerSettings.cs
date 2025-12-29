@@ -1,36 +1,30 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PlayerSettings
 {
     internal class CPlayerSettings
     {
         private int userid;
-        private CCSPlayerController player;
-        private Dictionary<string, string> cached_values;                
+        private readonly CCSPlayerController player;
+        private readonly Dictionary<string, string> cached_values;                
 
         public CPlayerSettings(CCSPlayerController _player)
         {
             player = _player;
             userid = -1;
             Storage.GetUserIdAsync(player, (userid) => this.userid = userid);
-            cached_values = new Dictionary<string, string>();
+            cached_values = [];
         }
 
         public string GetValue(string param, string default_value)
         {
-            string value;
-            if(!cached_values.TryGetValue(param, out value) || value == null)
-            {              
+            if (!cached_values.TryGetValue(param, out string? value) || value == null)
+            {
                 value = default_value;
                 cached_values[param] = value;
             }
-            
+
             return value;
         }
 
@@ -50,19 +44,22 @@ namespace PlayerSettings
             return player == _player;
         }
 
-        internal void ParseLoadedSettings(List<List<string>> rows, List<Action<CCSPlayerController>> actions)
+        internal void ParseLoadedSettings(List<List<string?>>? rows, List<Action<CCSPlayerController>> actions)
         {
-            Task.Run(() =>
+            if (rows != null)
             {
-                foreach (var row in rows)
+                Task.Run(() =>
                 {
-                    cached_values[row[0]] = row[1];
-                }
-            }).ContinueWith((_) =>
-            {
-                foreach (var action in actions)
-                    Server.NextFrameAsync(() => action(player));
-            });
+                    foreach (var row in rows)
+                    {
+                        if (row[0] is { } r0 && row[1] is { } r1) cached_values[r0] = r1;
+                    }
+                }).ContinueWith((_) =>
+                {
+                    foreach (var action in actions)
+                        Server.NextWorldUpdateAsync(() => action(player));
+                });
+            }
         }
 
     }
