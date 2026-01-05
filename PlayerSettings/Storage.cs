@@ -31,7 +31,7 @@ namespace PlayerSettings
         public static void GetUserIdAsync(CCSPlayerController player, Action<int> callback)
         {
             var steamid = player.SteamID;
-            db?.QueryAsync("SELECT `id` FROM `" + table + "users` WHERE `steam` = '{ARG}'", new List<string>([steamid.ToString()]), (data) =>
+            db?.QueryAsync("SELECT `id` FROM `" + table + "users` WHERE `steam` = {ARG}", new List<string>([steamid.ToString()]), (data) =>
             {
                 if (data != null)
                 {
@@ -39,7 +39,7 @@ namespace PlayerSettings
                     {
                         if (data[0] is { } d && d[0] is { } sSteamID) callback(int.Parse(sSteamID));
                     }
-                    else db.QueryAsync("INSERT INTO `" + table + "users` (`steam`) VALUES ('{ARG}'); SELECT `id` FROM `" + table + "users` WHERE `steam` = '{ARG}'", new List<string>([steamid.ToString(), steamid.ToString()]), (datainsert) =>
+                    else db.QueryAsync("INSERT INTO `" + table + "users` (`steam`) VALUES ({ARG}); SELECT `id` FROM `" + table + "users` WHERE `steam` = {ARG}", new List<string>([steamid.ToString(), steamid.ToString()]), (datainsert) =>
                     {
                         if (datainsert != null && datainsert[0] is { } di && di[0] is { } sSteamIDInsert) callback(int.Parse(sSteamIDInsert));
                     });
@@ -48,15 +48,15 @@ namespace PlayerSettings
         }
 
         internal static void LoadSettings(int userid, Action<List<List<string?>>?>? action) => db?.QueryAsync("SELECT `param`, `value` FROM `" + table + "values` WHERE `user_id` = {ARG}", new List<string>([userid.ToString()]), action);
-        public static void SetUserSettingValue(int userid, string param, string value) => db?.QueryAsync("SELECT `value` FROM `" + table + "values` WHERE `user_id` = {ARG} AND `param` = '{ARG}'", new List<string>([userid.ToString(), param]), (data) =>
+        public static void SetUserSettingValue(int userid, string param, string value) => db?.QueryAsync("SELECT `value` FROM `" + table + "values` WHERE `user_id` = {ARG} AND `param` = {ARG}", new List<string>([userid.ToString(), param]), (data) =>
             {
                 if (data != null) SetUserSettingValuePost(userid, param, value, data.Count);
             });
 
         private static void SetUserSettingValuePost(int userid, string param, string value, int co)
         {
-            if (co == 0) db?.QueryAsync("INSERT INTO `" + table + "values` (`user_id`, `param`, `value`) VALUES ({ARG}, '{ARG}', '{ARG}')", new List<string>([userid.ToString(), param, value]), null, true);
-            else db?.QueryAsync("UPDATE `" + table + "values` SET `value` = '{ARG}' WHERE `user_id` = {ARG} AND `param` = '{ARG}'", new List<string>([value, userid.ToString(), param]), null, true);
+            if (co == 0) db?.QueryAsync("INSERT INTO `" + table + "values` (`user_id`, `param`, `value`) VALUES ({ARG}, {ARG}, {ARG})", new List<string>([userid.ToString(), param, value]), null, true);
+            else db?.QueryAsync("UPDATE `" + table + "values` SET `value` = {ARG} WHERE `user_id` = {ARG} AND `param` = {ARG}", new List<string>([value, userid.ToString(), param]), null, true);
         }
 
         public static void Close() => db?.UnSet();

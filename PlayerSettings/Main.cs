@@ -21,7 +21,7 @@ public class PlayerSettingsCore : BasePlugin, IPluginConfig<PluginConfig>
     }
 
     public override string ModuleName => "[Core]PlayerSettingsNext";
-    public override string ModuleVersion => "1.0.0";
+    public override string ModuleVersion => "1.0.1";
     public override string ModuleAuthor => "Nick Fox, DarkerZ [RUS]";
     public override string ModuleDescription => "One storage for player's settings (aka ClientCookies)";
 
