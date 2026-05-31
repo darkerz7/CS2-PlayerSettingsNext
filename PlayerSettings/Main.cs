@@ -1,5 +1,6 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core.Attributes;
 using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Entities;
 using System.Text.Json.Serialization;
@@ -10,6 +11,7 @@ public class PluginConfig : BasePluginConfig
 {
     [JsonPropertyName("DatabaseParams")] public DatabaseParams DatabaseParams { get; set; } = new();
 }
+[MinimumApiVersion(369)]
 public class PlayerSettingsCore : BasePlugin, IPluginConfig<PluginConfig>
 {
     public PluginConfig Config { get; set; } = new();
@@ -21,7 +23,7 @@ public class PlayerSettingsCore : BasePlugin, IPluginConfig<PluginConfig>
     }
 
     public override string ModuleName => "[Core]PlayerSettingsNext";
-    public override string ModuleVersion => "1.0.1";
+    public override string ModuleVersion => "1.1";
     public override string ModuleAuthor => "Nick Fox, DarkerZ [RUS]";
     public override string ModuleDescription => "One storage for player's settings (aka ClientCookies)";
 
