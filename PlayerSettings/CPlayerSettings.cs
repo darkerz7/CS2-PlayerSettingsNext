@@ -1,19 +1,20 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using System.Collections.Concurrent;
 
 namespace PlayerSettings
 {
     internal class CPlayerSettings
     {
-        private int userid;
         private readonly CCSPlayerController player;
-        private readonly Dictionary<string, string> cached_values;                
+        private readonly ConcurrentDictionary<string, string> cached_values;
+        private readonly TaskCompletionSource<int> useridSource;
 
         public CPlayerSettings(CCSPlayerController _player)
         {
             player = _player;
-            userid = -1;
-            Storage.GetUserIdAsync(player, (userid) => this.userid = userid);
+            useridSource = new TaskCompletionSource<int>();
+            Storage.GetUserIdAsync(player, (userid) => useridSource.TrySetResult(userid));
             cached_values = [];
         }
 
@@ -28,38 +29,41 @@ namespace PlayerSettings
             return value;
         }
 
-        public void SetValue(string param, string value)
+        public async void SetValue(string param, string value)
         {
             cached_values[param] = value;
+
+            int userid = await useridSource.Task;
+
             Storage.SetUserSettingValue(userid, param, value);
         }
 
-        public int UserId()
+        public Task<int> GetUserIdAsync()
         {
-            return userid;
+            return useridSource.Task;
         }
 
-        public bool EqualPlayer(CCSPlayerController _player)
+        internal void ParseLoadedSettings(int slot, List<List<string?>>? rows, List<Action<CCSPlayerController>> actions)
         {
-            return player == _player;
-        }
+            if (rows == null) return;
 
-        internal void ParseLoadedSettings(List<List<string?>>? rows, List<Action<CCSPlayerController>> actions)
-        {
-            if (rows != null)
+            var rowsCopy = rows.Select(r => r.ToList()).ToList();
+
+            Task.Run(() =>
             {
-                Task.Run(() =>
+                foreach (var row in rowsCopy)
                 {
-                    foreach (var row in rows)
-                    {
-                        if (row[0] is { } r0 && row[1] is { } r1) cached_values[r0] = r1;
-                    }
-                }).ContinueWith((_) =>
+                    if (row.Count >= 2 && row[0] is string key && row[1] is string val) cached_values[key] = val;
+                }
+            }).ContinueWith((_) =>
+            {
+                Server.NextWorldUpdateAsync(() =>
                 {
-                    foreach (var action in actions)
-                        Server.NextWorldUpdateAsync(() => action(player));
+                    var currentPlayer = Utilities.GetPlayerFromSlot(slot);
+                    if (currentPlayer == null || !currentPlayer.IsValid || currentPlayer.IsBot) return;
+                    foreach (var action in actions) action(player);
                 });
-            }
+            });
         }
 
     }

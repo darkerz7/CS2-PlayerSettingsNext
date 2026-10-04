@@ -23,7 +23,7 @@ public class PlayerSettingsCore : BasePlugin, IPluginConfig<PluginConfig>
     }
 
     public override string ModuleName => "[Core]PlayerSettingsNext";
-    public override string ModuleVersion => "1.1";
+    public override string ModuleVersion => "1.2";
     public override string ModuleAuthor => "Nick Fox, DarkerZ [RUS]";
     public override string ModuleDescription => "One storage for player's settings (aka ClientCookies)";
 
@@ -34,6 +34,7 @@ public class PlayerSettingsCore : BasePlugin, IPluginConfig<PluginConfig>
         _api = new SettingsApi();
         Capabilities.RegisterPluginCapability(_pluginCapability, () => _api);
         RegisterListener<Listeners.OnClientAuthorized>(OnClientAuthorized);
+        RegisterListener<Listeners.OnClientDisconnect>(OnClientDisconnect);
 
         if (hotReload)
             foreach (var player in Utilities.GetPlayers())
@@ -44,8 +45,10 @@ public class PlayerSettingsCore : BasePlugin, IPluginConfig<PluginConfig>
 
     private void OnClientAuthorized(int slot, SteamID steamID)
     {
-        if(Utilities.GetPlayerFromSlot(slot) is { } player) _api?.LoadOnConnect(player);
+        _api?.LoadOnConnect(slot);
     }
+
+    private void OnClientDisconnect(int slot) => _api?.RemoveUser(slot);
 }
 
 public struct DatabaseParams
